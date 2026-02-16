@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-#[derive(Debug)]
 pub enum LedgerErrors {
     AccountAlreadyExist(String),
     AccountNotFound(String),
