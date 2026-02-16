@@ -41,8 +41,8 @@ pub struct Ledger {
 }
 
 impl Ledger {
-    pub fn new() -> Ledger {
-        Ledger {
+    pub fn new() -> Self {
+        Self {
             accounts: HashMap::new(),
         }
     }
