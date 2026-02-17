@@ -1,6 +1,7 @@
 use solana_sdk::pubkey::Pubkey;
 use std::{
     fmt::Display,
+    mem,
     time::{SystemTime, UNIX_EPOCH},
     u64,
 };
@@ -76,8 +77,8 @@ pub struct Account {
     pub pubkey: String,
     #[allow(dead_code)]
     owner: String,
-    lamports: u64,
-    account_type: AccountType,
+    pub lamports: u64,
+    pub account_type: AccountType,
     #[allow(dead_code)]
     created_at: u64,
 }
@@ -98,8 +99,8 @@ impl Account {
         }
     }
 
-    pub fn is_account_type(&self, account_type: String) -> bool {
-        self.account_type.to_string() == account_type
+    pub fn is_account_type(&self, account_type: AccountType) -> bool {
+        mem::discriminant(&self.account_type) == mem::discriminant(&account_type)
     }
 }
 
