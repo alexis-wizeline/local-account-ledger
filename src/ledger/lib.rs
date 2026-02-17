@@ -1,4 +1,9 @@
-use std::collections::HashMap;
+use borsh::{BorshDeserialize, BorshSerialize, to_vec};
+use std::{
+    collections::HashMap,
+    fs::{self, File},
+    io::{Read, Write},
+};
 
 pub enum LedgerErrors {
     AccountAlreadyExist(String),
@@ -22,15 +27,18 @@ impl std::fmt::Display for LedgerErrors {
     }
 }
 
-#[derive(Debug)]
+#[derive(BorshSerialize, BorshDeserialize, Debug)]
 struct Account {
-    // name: String,
     balance: u32,
+    owner: String,
 }
 
 impl Account {
     fn new() -> Account {
-        Account { balance: 0 }
+        Account {
+            balance: 0,
+            owner: "system".to_owned(),
+        }
     }
 }
 
@@ -40,7 +48,26 @@ pub struct Ledger {
 }
 
 impl Ledger {
-    pub fn new() -> Self {
+    pub fn save_to_file(&self) -> std::io::Result<()> {
+        let path = "./temp/ledger.bin";
+        if let Some(parent) = std::path::Path::new(path).parent() {
+            fs::create_dir(parent)?
+        }
+
+        let contet: Vec<u8> = to_vec(&self.accounts).unwrap();
+        let mut file = File::create(path).unwrap();
+        file.write_all(&contet)
+    }
+
+    pub fn load_from_file() -> Self {
+        let path = "./temp/ledger.bin";
+        if let Ok(file) = File::open(path).as_mut() {
+            let mut buff:Vec<u8> = Vec::new();
+            file.read_to_end(&mut buff).unwrap();
+
+            let accounts: HashMap<String, Account> = HashMap::try_from_slice(&buff).unwrap();
+            return Self { accounts: accounts };
+        }
         Self {
             accounts: HashMap::new(),
         }
