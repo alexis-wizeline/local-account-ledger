@@ -25,6 +25,21 @@ fn main() {
     println!("{:?}", ledger);
     println!("{}", ledger.total_supply());
     println!("{:?} - {:?}", wallet_1.summary(), wallet_1);
+
+    println!();
+    let buff = wallet_1.clone().save_to_bytes().unwrap();
+    println!("{:?}", buff);
+
+    let wallet_1_bytes = Account::from_bytes(&buff);
+    println!("{:?}", wallet_1_bytes.unwrap());
+
+    handle_error(ledger.save_ledger("./temp/ledger/ledger.bin").err());
+
+    println!("old: {:?}", ledger);
+    let ledger_2 = Ledger::load_ledger("./temp/ledger/ledger.bin");
+    println!("new: {:?}", ledger_2);
+
+    handle_error(ledger_2.err());
 }
 
 fn handle_error(res: Option<LedgerError>) {

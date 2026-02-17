@@ -1,3 +1,9 @@
+use borsh::{BorshDeserialize, to_vec};
+use std::{
+    fs::{self, File},
+    io::{Read, Write},
+};
+
 use crate::pkg::{
     account::{Account, AccountType},
     errors::LedgerError,
@@ -13,6 +19,46 @@ impl Ledger {
         Self {
             accounts: Vec::new(),
         }
+    }
+
+    pub fn load_ledger(path: &str) -> Result<Ledger, LedgerError> {
+        let mut file = File::open(path);
+        if let Err(err) = file {
+            return Err(LedgerError::SerializationError(err.to_string()));
+        }
+
+        let mut buff: Vec<u8> = Vec::new();
+        if let Err(err) = file.as_mut().unwrap().read_to_end(&mut buff) {
+            return Err(LedgerError::SerializationError(err.to_string()));
+        };
+
+        let accounts: Result<Vec<Account>, std::io::Error> = Vec::<Account>::try_from_slice(&buff);
+        if let Err(err) = accounts {
+            return Err(LedgerError::SerializationError(err.to_string()));
+        }
+
+        Ok(Ledger {
+            accounts: accounts.unwrap(),
+        })
+    }
+
+    pub fn save_ledger(&self, path: &str) -> Result<(), LedgerError> {
+        let last_index = path.rfind("/").unwrap_or(0);
+        if let Err(err) = fs::create_dir_all(path.get(0..=last_index).unwrap_or("")) {
+            return Err(LedgerError::SerializationError(err.to_string()));
+        }
+
+        let buff = to_vec(&self.accounts);
+        if let Err(err) = &buff {
+            return Err(LedgerError::SerializationError(err.to_string()));
+        }
+
+        let mut file = File::create(path).unwrap();
+        if let Err(err) = file.write_all(&buff.unwrap()) {
+            return Err(LedgerError::SerializationError(err.to_string()));
+        }
+
+        Ok(())
     }
 
     pub fn add_account(&mut self, acc: Account) -> Result<&Account, LedgerError> {

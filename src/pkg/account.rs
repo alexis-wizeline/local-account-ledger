@@ -1,3 +1,4 @@
+use borsh::{BorshDeserialize, BorshSerialize, to_vec};
 use solana_sdk::pubkey::Pubkey;
 use std::{
     fmt::Display,
@@ -6,7 +7,9 @@ use std::{
     u64,
 };
 
-#[derive(Debug, Clone)]
+use crate::pkg::errors::LedgerError;
+
+#[derive(Debug, Clone, BorshSerialize, BorshDeserialize)]
 pub enum AccountType {
     Wallet {
         balance: u64,
@@ -72,7 +75,7 @@ impl Display for AccountType {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, BorshSerialize, BorshDeserialize)]
 pub struct Account {
     pub pubkey: String,
     #[allow(dead_code)]
@@ -101,6 +104,24 @@ impl Account {
 
     pub fn is_account_type(&self, account_type: AccountType) -> bool {
         mem::discriminant(&self.account_type) == mem::discriminant(&account_type)
+    }
+
+    pub fn save_to_bytes(&self) -> Result<Vec<u8>, LedgerError> {
+        let buff = to_vec(&self);
+        if let Err(err) = &buff {
+            return Err(LedgerError::SerializationError(err.to_string()))
+        }
+
+        Ok(buff.unwrap())
+    }
+
+    pub fn from_bytes(buff: &[u8]) -> Result<Account, LedgerError> {
+        let account = Account::try_from_slice(&buff);
+        if let Err(err) = &account{
+            return Err(LedgerError::SerializationError(err.to_string()));
+        }
+
+        Ok(account.unwrap())
     }
 }
 
