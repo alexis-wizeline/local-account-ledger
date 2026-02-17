@@ -13,6 +13,7 @@ fn main() {
 
     let key1 = name1.clone().to_lowercase();
     let key2 = name2.clone().to_lowercase();
+    
     handle_error(ledger.new_account(&name1));
     handle_error(ledger.new_account(&name1));
     handle_error(ledger.new_account(&name2));

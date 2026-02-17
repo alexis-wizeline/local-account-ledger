@@ -34,8 +34,8 @@ struct Account {
 }
 
 impl Account {
-    fn new() -> Account {
-        Account {
+    fn new() -> Self {
+        Self {
             balance: 0,
             owner: "system".to_owned(),
         }
