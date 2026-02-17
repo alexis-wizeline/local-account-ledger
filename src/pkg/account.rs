@@ -73,10 +73,12 @@ impl Display for AccountType {
 
 #[derive(Debug, Clone)]
 pub struct Account {
-    pubkey: String,
+    pub pubkey: String,
+    #[allow(dead_code)]
     owner: String,
     lamports: u64,
     account_type: AccountType,
+    #[allow(dead_code)]
     created_at: u64,
 }
 
@@ -94,6 +96,10 @@ impl Account {
                 .expect("SystemTime set to a time before UNIX EPOCH")
                 .as_secs(),
         }
+    }
+
+    pub fn is_account_type(&self, account_type: String) -> bool {
+        self.account_type.to_string() == account_type
     }
 }
 
