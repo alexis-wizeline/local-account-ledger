@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 borsh = { version = "1.6.0", features = ["derive"] }
+solana-sdk = "4.0.0"

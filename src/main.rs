@@ -1,7 +1,7 @@
-use crate::ledger::lib::{ LedgerErrors, Ledger };
+use crate::pkg::lib::{ LedgerErrors, Ledger };
+use crate::pkg::account::{ Account, AccountType, Summarizable };
 
-pub mod ledger;
-
+pub mod pkg;
 
 
 fn main() {
@@ -24,7 +24,10 @@ fn main() {
 
    let _res =  ledger.save_to_file();
 
+   let wallet_1 = Account::new(AccountType::Wallet { balance: 10000 });
+
     println!("{:?}", ledger);
+    println!("{:?} - {:?}", wallet_1.summary(), wallet_1);
 }
 
 
