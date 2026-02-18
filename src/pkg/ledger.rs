@@ -1,6 +1,6 @@
 use borsh::{BorshDeserialize, to_vec};
 use std::{
-    fs::{self, File},
+    fs::{File, create_dir_all},
     io::{Read, Write},
 };
 
@@ -44,7 +44,7 @@ impl Ledger {
 
     pub fn save_ledger(&self, path: &str) -> Result<(), LedgerError> {
         let last_index = path.rfind("/").unwrap_or(0);
-        if let Err(err) = fs::create_dir_all(path.get(0..=last_index).unwrap_or("")) {
+        if let Err(err) = create_dir_all(path.get(0..=last_index).unwrap_or("")) {
             return Err(LedgerError::SerializationError(err.to_string()));
         }
 
