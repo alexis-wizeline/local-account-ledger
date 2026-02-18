@@ -33,6 +33,19 @@ impl AccountType {
     fn owner(&self) -> String {
         match self {
             AccountType::Wallet { balance: _ } => String::from("system"),
+            AccountType::Stake {
+                validator: _,
+                staked_amount: _,
+            } => String::from("system"),
+            AccountType::Program {
+                executable: _,
+                program_data: _,
+            } => String::from("BPFLoader"),
+            AccountType::TokenAccount {
+                mint: _,
+                token_balance: _,
+                delegate: _,
+            } => String::from("Token"),
             _ => String::from(""),
         }
     }
