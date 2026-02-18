@@ -1,5 +1,5 @@
 use borsh::{BorshDeserialize, BorshSerialize, to_vec};
-use solana_sdk::pubkey::{Pubkey};
+use solana_sdk::pubkey::Pubkey;
 use std::{
     fmt::Display,
     mem,
@@ -107,7 +107,7 @@ impl Account {
     pub fn save_to_bytes(&self) -> Result<Vec<u8>, LedgerError> {
         let buff = to_vec(&self);
         if let Err(err) = &buff {
-            return Err(LedgerError::SerializationError(err.to_string()))
+            return Err(LedgerError::SerializationError(err.to_string()));
         }
 
         Ok(buff.unwrap())
@@ -115,7 +115,7 @@ impl Account {
 
     pub fn from_bytes(buff: &[u8]) -> Result<Account, LedgerError> {
         let account = Account::try_from_slice(&buff);
-        if let Err(err) = &account{
+        if let Err(err) = &account {
             return Err(LedgerError::SerializationError(err.to_string()));
         }
 
@@ -154,11 +154,21 @@ mod tests {
     fn test_account_type_display() {
         let wallet_type = AccountType::Wallet { balance: 0 };
         assert_eq!(wallet_type.to_string(), "Wallet");
-        let program_type = AccountType::Program { executable: false, program_data: vec![] };
+        let program_type = AccountType::Program {
+            executable: false,
+            program_data: vec![],
+        };
         assert_eq!(program_type.to_string(), "Program");
-        let token_type = AccountType::TokenAccount { mint: "".to_string(), token_balance: 0, delegate: None };
+        let token_type = AccountType::TokenAccount {
+            mint: "".to_string(),
+            token_balance: 0,
+            delegate: None,
+        };
         assert_eq!(token_type.to_string(), "Token Account");
-        let stake_type = AccountType::Stake { validator: "".to_string(), staked_amount: 0 };
+        let stake_type = AccountType::Stake {
+            validator: "".to_string(),
+            staked_amount: 0,
+        };
         assert_eq!(stake_type.to_string(), "Stake");
     }
 
@@ -175,7 +185,7 @@ mod tests {
         assert_eq!(wallet.summary(), clone_wallet.summary());
         if let AccountType::Wallet { balance } = clone_wallet.account_type {
             assert_eq!(balance, lamports);
-        }else{
+        } else {
             panic!("account result is not a wallet type");
         }
     }
@@ -184,8 +194,10 @@ mod tests {
     fn test_account_program_round_trip_serialization() {
         let executable_val = true;
         let program_data_val = b"hello random program passing by".to_vec();
-        let program_account = Account::new(AccountType::Program { executable: executable_val, program_data: program_data_val.clone() });
-        
+        let program_account = Account::new(AccountType::Program {
+            executable: executable_val,
+            program_data: program_data_val.clone(),
+        });
 
         let clone_program_account = serialized_deserialize(program_account.clone());
         assert_eq!(program_account.pubkey, clone_program_account.pubkey);
@@ -193,22 +205,27 @@ mod tests {
         assert_eq!(program_account.owner, clone_program_account.owner);
         assert_eq!(program_account.lamports, clone_program_account.lamports);
         assert_eq!(program_account.summary(), clone_program_account.summary());
-        if let AccountType::Program { executable, program_data } = clone_program_account.account_type {
+        if let AccountType::Program {
+            executable,
+            program_data,
+        } = clone_program_account.account_type
+        {
             assert_eq!(executable, executable_val);
             assert_eq!(program_data, program_data_val)
-        }else{
+        } else {
             panic!("account type is not program type");
         }
-
     }
 
     #[test]
     fn test_account_token_round_trip_serialization() {
         let mint_data = Pubkey::new_unique().to_string();
         let token_balance_data = 200_000_000_000_000;
-        let token_account = Account::new(AccountType::TokenAccount { mint: mint_data.clone(), 
-            token_balance: token_balance_data, delegate: None });
-        
+        let token_account = Account::new(AccountType::TokenAccount {
+            mint: mint_data.clone(),
+            token_balance: token_balance_data,
+            delegate: None,
+        });
 
         let clone_token_account = serialized_deserialize(token_account.clone());
         assert_eq!(token_account.pubkey, clone_token_account.pubkey);
@@ -217,68 +234,100 @@ mod tests {
         assert_eq!(token_account.owner, clone_token_account.owner);
         assert_eq!(token_account.summary(), clone_token_account.summary());
 
-        if let AccountType::TokenAccount { mint, token_balance, delegate } = clone_token_account.account_type {
+        if let AccountType::TokenAccount {
+            mint,
+            token_balance,
+            delegate,
+        } = clone_token_account.account_type
+        {
             assert_eq!(mint_data, mint);
             assert_eq!(token_balance_data, token_balance);
             assert_eq!(token_account.lamports, token_balance);
             assert_eq!(delegate, None);
-        }else{
+        } else {
             panic!("account is not a token account");
         }
     }
 
     #[test]
-    fn test_account_stake_round_trip_serialization(){
+    fn test_account_stake_round_trip_serialization() {
         let validator_data = Pubkey::new_unique().to_string();
         let staked_amount_data = 2_000_000_000;
-        let stake_account = Account::new(AccountType::Stake { 
-            validator: validator_data.clone(), staked_amount: staked_amount_data });
-        
+        let stake_account = Account::new(AccountType::Stake {
+            validator: validator_data.clone(),
+            staked_amount: staked_amount_data,
+        });
+
         let clone_stake_account = serialized_deserialize(stake_account.clone());
         assert_eq!(stake_account.created_at, clone_stake_account.created_at);
         assert_eq!(stake_account.owner, clone_stake_account.owner);
         assert_eq!(stake_account.pubkey, clone_stake_account.pubkey);
         assert_eq!(stake_account.lamports, clone_stake_account.lamports);
         assert_eq!(stake_account.summary(), clone_stake_account.summary());
-        if let AccountType::Stake { validator, staked_amount } = clone_stake_account.account_type {
+        if let AccountType::Stake {
+            validator,
+            staked_amount,
+        } = clone_stake_account.account_type
+        {
             assert_eq!(validator_data, validator);
             assert_eq!(staked_amount_data, staked_amount);
-        }else{
+        } else {
             panic!("account is not a stake account");
         }
-
     }
 
     #[test]
-    fn test_serialization_error(){
+    fn test_serialization_error() {
         let bad_data = b"hello random set of bytes passing by";
-        if let Err(err) = Account::from_bytes(bad_data){
-            assert!(mem::discriminant(&err) == mem::discriminant(&LedgerError::SerializationError("".to_string())));
+        if let Err(err) = Account::from_bytes(bad_data) {
+            assert!(
+                mem::discriminant(&err)
+                    == mem::discriminant(&LedgerError::SerializationError("".to_string()))
+            );
         }
     }
 
     #[test]
     fn test_is_account_type() {
-        let account = Account::new(AccountType::Stake { validator: String::new(), staked_amount: 0 });
-        assert!(account.is_account_type(AccountType::Stake { validator: String::new(), staked_amount: 0 }));
-        assert!(!account.is_account_type(AccountType::TokenAccount { mint: String::new(), token_balance: 0, delegate: None }));
+        let account = Account::new(AccountType::Stake {
+            validator: String::new(),
+            staked_amount: 0,
+        });
+        assert!(account.is_account_type(AccountType::Stake {
+            validator: String::new(),
+            staked_amount: 0
+        }));
+        assert!(!account.is_account_type(AccountType::TokenAccount {
+            mint: String::new(),
+            token_balance: 0,
+            delegate: None
+        }));
     }
 
     #[test]
     fn test_account_summary() {
         let lamports: u64 = 20_000_000_000;
-        let acc_type = AccountType::Stake { validator: String::new() , staked_amount: lamports };
+        let acc_type = AccountType::Stake {
+            validator: String::new(),
+            staked_amount: lamports,
+        };
         let account = Account::new(acc_type);
 
         let pubkey = account.pubkey.clone();
-        let sumary_key = pubkey.get(..8).unwrap().to_owned() + ".."+pubkey.chars().rev().collect::<String>().get(..4).unwrap();
-        let sol = (lamports as f64)/1_000_000_000.0;
-        let acc_type_str = AccountType::Stake { validator: String::new(), staked_amount: 0 }.to_string();
-        assert_eq!(account.summary(), format!("{sumary_key}|{acc_type_str}|{sol} SOL"));
-
-
+        let sumary_key = pubkey.get(..8).unwrap().to_owned()
+            + ".."
+            + pubkey.chars().rev().collect::<String>().get(..4).unwrap();
+        let sol = (lamports as f64) / 1_000_000_000.0;
+        let acc_type_str = AccountType::Stake {
+            validator: String::new(),
+            staked_amount: 0,
+        }
+        .to_string();
+        assert_eq!(
+            account.summary(),
+            format!("{sumary_key}|{acc_type_str}|{sol} SOL")
+        );
     }
-
 
     fn serialized_deserialize(acc: Account) -> Account {
         let bytes = acc.save_to_bytes();
@@ -292,5 +341,4 @@ mod tests {
 
         clone_acc_result.unwrap()
     }
-
 }
