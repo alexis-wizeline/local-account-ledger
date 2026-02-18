@@ -78,11 +78,9 @@ impl Display for AccountType {
 #[derive(Debug, Clone, BorshSerialize, BorshDeserialize)]
 pub struct Account {
     pub pubkey: String,
-    #[allow(dead_code)]
     owner: String,
     pub lamports: u64,
     pub account_type: AccountType,
-    #[allow(dead_code)]
     created_at: u64,
 }
 
@@ -146,4 +144,76 @@ impl Summarizable for Account {
 
         format!("{summarized_key}|{account_type}|{sol} SOL")
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_account_type_display() {
+        let wallet_type = AccountType::Wallet { balance: 0 };
+        assert_eq!(wallet_type.to_string(), "Wallet");
+        let program_type = AccountType::Program { executable: false, program_data: vec![] };
+        assert_eq!(program_type.to_string(), "Program");
+        let token_type = AccountType::TokenAccount { mint: "".to_string(), token_balance: 0, delegate: None };
+        assert_eq!(token_type.to_string(), "Token Account");
+        let stake_type = AccountType::Stake { validator: "".to_string(), staked_amount: 0 };
+        assert_eq!(stake_type.to_string(), "Stake");
+    }
+
+    #[test]
+    fn test_account_wallet_serialized_round_trip() {
+        let lamports = 5_000_000_000;
+        let wallet = Account::new(AccountType::Wallet { balance: lamports });
+
+        let clone_wallet = serialized_deserialize(wallet.clone());
+        assert_eq!(wallet.pubkey, clone_wallet.pubkey);
+        assert_eq!(wallet.lamports, clone_wallet.lamports);
+        assert_eq!(wallet.owner, clone_wallet.owner);
+        assert_eq!(wallet.created_at, clone_wallet.created_at);
+        assert_eq!(wallet.summary(), clone_wallet.summary());
+        if let AccountType::Wallet { balance } = clone_wallet.account_type {
+            assert_eq!(balance, lamports);
+        }else{
+            panic!("account result is not a wallet type");
+        }
+    }
+
+    #[test]
+    fn test_account_program_round_trip_serialization() {
+        let executable_val = true;
+        let program_data_val = b"hello random program passing by".to_vec();
+        let program_account = Account::new(AccountType::Program { executable: executable_val, program_data: program_data_val.clone() });
+        
+
+        let clone_program_account = serialized_deserialize(program_account.clone());
+        assert_eq!(program_account.pubkey, clone_program_account.pubkey);
+        assert_eq!(program_account.created_at, clone_program_account.created_at);
+        assert_eq!(program_account.owner, clone_program_account.owner);
+        assert_eq!(program_account.lamports, clone_program_account.lamports);
+        assert_eq!(program_account.summary(), clone_program_account.summary());
+        if let AccountType::Program { executable, program_data } = clone_program_account.account_type {
+            assert_eq!(executable, executable_val);
+            assert_eq!(program_data, program_data_val)
+        }else{
+            panic!("account type is not program type");
+        }
+
+    }
+
+
+    fn serialized_deserialize(acc: Account) -> Account {
+        let bytes = acc.save_to_bytes();
+        if let Err(err) = bytes {
+            panic!("{}", err);
+        }
+        let clone_acc_result = Account::from_bytes(&bytes.unwrap());
+        if let Err(err) = clone_acc_result {
+            panic!("{}", err);
+        }
+
+        clone_acc_result.unwrap()
+    }
+
 }
