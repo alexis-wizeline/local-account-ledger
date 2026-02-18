@@ -89,6 +89,7 @@ impl Ledger {
                     validator: "".to_string(),
                     staked_amount: 0,
                 }),
+                "all" => true,
                 _ => false,
             })
             .collect()
@@ -177,16 +178,22 @@ mod test {
         assert_eq!(err.to_string(), expected_err.to_string());
         assert!(ledger.accounts.len() == 1);
 
-        let new_account = Account::new(AccountType::Program { executable: true, program_data: vec![] });
+        let new_account = Account::new(AccountType::Program {
+            executable: true,
+            program_data: vec![],
+        });
         let ref_new_account = ledger.add_account(new_account.clone()).unwrap();
         assert!(new_account.pubkey == ref_new_account.pubkey);
         assert!(ledger.accounts.len() == 2);
     }
 
     #[test]
-    fn ledger_test_accounts_by_type(){
+    fn ledger_test_accounts_by_type() {
         let wallet_1 = Account::new(AccountType::Wallet { balance: 0 });
-        let program_1 = Account::new(AccountType::Program { executable: false, program_data: vec![] });
+        let program_1 = Account::new(AccountType::Program {
+            executable: false,
+            program_data: vec![],
+        });
 
         let mut ledger = Ledger::new();
 
@@ -194,7 +201,7 @@ mod test {
         handle_add_account(&mut ledger, program_1.clone());
 
         let wallets = ledger.accounts_by_type("wallet");
-        assert!(wallets.len()==1);
+        assert!(wallets.len() == 1);
         assert_eq!(wallets.first().unwrap().pubkey, wallet_1.pubkey);
 
         let toke_accounts = ledger.accounts_by_type("toke_account");
@@ -213,20 +220,29 @@ mod test {
         let mut ledger = Ledger::new();
         assert!(ledger.total_supply() == 0);
 
-        let program_acc = Account::new(AccountType::Program { executable: false, program_data: vec![] });
+        let program_acc = Account::new(AccountType::Program {
+            executable: false,
+            program_data: vec![],
+        });
         handle_add_account(&mut ledger, program_acc);
         assert!(ledger.total_supply() == 1); // program does not have balance but they need a minimun of lamports to be rent excempt;
 
         let stacked_coins: u64 = 200_000_000_000_000;
-        let stake_acc = Account::new(AccountType::TokenAccount { mint: String::new(), token_balance: stacked_coins, delegate: None });
+        let stake_acc = Account::new(AccountType::TokenAccount {
+            mint: String::new(),
+            token_balance: stacked_coins,
+            delegate: None,
+        });
         handle_add_account(&mut ledger, stake_acc);
-        assert!(ledger.total_supply() == stacked_coins+1); // we use the amouint of stacked coins as lamports for the account
+        assert!(ledger.total_supply() == stacked_coins + 1); // we use the amouint of stacked coins as lamports for the account
 
         let balance_coins: u64 = 40_000_000_000;
-        let wallet_acc = Account::new(AccountType::Wallet { balance: balance_coins });
+        let wallet_acc = Account::new(AccountType::Wallet {
+            balance: balance_coins,
+        });
         handle_add_account(&mut ledger, wallet_acc);
 
-        assert!(ledger.total_supply()== stacked_coins+balance_coins+1);
+        assert!(ledger.total_supply() == stacked_coins + balance_coins + 1);
     }
 
     #[test]
@@ -234,24 +250,31 @@ mod test {
         let wallet_1 = Account::new(AccountType::Wallet { balance: 10 });
         let wallet_2 = Account::new(AccountType::Wallet { balance: 2 });
 
-        let program_1 = Account::new(AccountType::Program { executable: false, program_data: vec![] });
+        let program_1 = Account::new(AccountType::Program {
+            executable: false,
+            program_data: vec![],
+        });
 
         let mut ledger = Ledger::new();
         handle_add_account(&mut ledger, wallet_1.clone());
         handle_add_account(&mut ledger, wallet_2.clone());
         handle_add_account(&mut ledger, program_1.clone());
 
-        if let Err(err) = ledger.transfer(&wallet_1.pubkey, &wallet_2.pubkey, 15){
-            let expected_err = LedgerError::InsufficientFunds { require: 15, available: 10 };
+        if let Err(err) = ledger.transfer(&wallet_1.pubkey, &wallet_2.pubkey, 15) {
+            let expected_err = LedgerError::InsufficientFunds {
+                require: 15,
+                available: 10,
+            };
             assert_eq!(err.to_string(), expected_err.to_string());
         }
 
-        if let Err(err) = ledger.transfer(&wallet_1.pubkey, &wallet_2.pubkey, 3){
+        if let Err(err) = ledger.transfer(&wallet_1.pubkey, &wallet_2.pubkey, 3) {
             panic!("{}", err.to_string());
         }
 
         if let Err(err) = ledger.transfer(&wallet_1.pubkey, &program_1.pubkey, 1) {
-            let expected_err = LedgerError::InvalidTransfer(format!("key: {} is not a Wallet", program_1.pubkey));
+            let expected_err =
+                LedgerError::InvalidTransfer(format!("key: {} is not a Wallet", program_1.pubkey));
             assert_eq!(err.to_string(), expected_err.to_string());
         }
     }

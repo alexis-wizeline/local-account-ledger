@@ -62,7 +62,7 @@ impl Ledger {
     pub fn load_from_file() -> Self {
         let path = "./temp/ledger.bin";
         if let Ok(file) = File::open(path).as_mut() {
-            let mut buff:Vec<u8> = Vec::new();
+            let mut buff: Vec<u8> = Vec::new();
             file.read_to_end(&mut buff).unwrap();
 
             let accounts: HashMap<String, Account> = HashMap::try_from_slice(&buff).unwrap();

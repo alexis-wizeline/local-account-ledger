@@ -142,7 +142,7 @@ impl Summarizable for Account {
         let account_type = &self.account_type;
         let sol = (self.lamports as f64) / 1_000_000_000.0;
 
-        format!("{summarized_key}|{account_type}|{sol} SOL")
+        format!("{summarized_key} | {account_type} | {sol} SOL")
     }
 }
 
