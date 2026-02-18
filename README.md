@@ -31,6 +31,3 @@ ledger.save_ledger("./temp/ledger/ledger.bin");
 ## Dependencies
 - [borsh](https://crates.io/crates/borsh)
 - [solana-sdk](https://crates.io/crates/solana-sdk)
-
-## License
-MIT
