@@ -46,7 +46,6 @@ impl AccountType {
                 token_balance: _,
                 delegate: _,
             } => String::from("Token"),
-            _ => String::from(""),
         }
     }
 
